@@ -28,15 +28,26 @@ jobs:
           java-version: '21'
           distribution: 'temurin'
 
-      # Cài đặt Capacitor và khởi tạo dự án Android tự động
       - name: Install Capacitor packages
         run: npm install @capacitor/core @capacitor/cli @capacitor/android --legacy-peer-deps
 
-      - name: Init Capacitor
-        run: npx cap init "EcoSort" "com.ecosort.app" --web-dir=dist
-
       - name: Add Android Platform
         run: npx cap add android
+
+      # BƯỚC MỚI: Tự động vá lỗi xung đột Kotlin
+      - name: Fix Kotlin Duplicate Classes
+        run: |
+          cat >> android/app/build.gradle << 'EOF'
+
+          // Fix Kotlin duplicate class conflicts
+          configurations.all {
+              resolutionStrategy {
+                  force 'org.jetbrains.kotlin:kotlin-stdlib:1.8.22'
+                  force 'org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.8.22'
+                  force 'org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.8.22'
+              }
+          }
+          EOF
 
       - name: Sync Capacitor
         run: npx cap sync android
