@@ -1,0 +1,6 @@
+{
+  "name": "EcoSort - Ứng Dụng Phân Loại Rác Thông Minh",
+  "description": "Ứng dụng phân loại rác thông minh, hướng dẫn xử lý theo màu thùng rác, tích điểm thăng hạng, mẹo sống xanh và tra cứu điểm thu gom rác.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
