@@ -34,12 +34,9 @@ jobs:
       - name: Add Android Platform
         run: npx cap add android
 
-      # BƯỚC MỚI: Tự động vá lỗi xung đột Kotlin
       - name: Fix Kotlin Duplicate Classes
         run: |
           cat >> android/app/build.gradle << 'EOF'
-
-          // Fix Kotlin duplicate class conflicts
           configurations.all {
               resolutionStrategy {
                   force 'org.jetbrains.kotlin:kotlin-stdlib:1.8.22'
@@ -48,6 +45,14 @@ jobs:
               }
           }
           EOF
+
+      # BƯỚC MỚI 1: Cài đặt công cụ tạo icon
+      - name: Install Capacitor Assets
+        run: npm install @capacitor/assets --legacy-peer-deps
+
+      # BƯỚC MỚI 2: Tự động tạo icon Android từ file resources/icon.png
+      - name: Generate App Icons
+        run: npx @capacitor/assets generate --android
 
       - name: Sync Capacitor
         run: npx cap sync android
