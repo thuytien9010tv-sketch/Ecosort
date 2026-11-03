@@ -1,6 +1,24 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
-import { Settings, Bell, BellOff, User, Moon, Sun, Globe, LogOut, Check, Edit3, X } from 'lucide-react';
+import {
+  Settings,
+  Bell,
+  BellOff,
+  User,
+  Moon,
+  Sun,
+  Globe,
+  LogOut,
+  LogIn,
+  Check,
+  Edit3,
+  X,
+  ShieldCheck,
+  Sparkles,
+  Mail,
+  Send,
+  Loader2,
+} from 'lucide-react';
 import { Language } from '../types';
 
 interface CornerSettingsProps {
@@ -14,12 +32,20 @@ export const CornerSettings: React.FC<CornerSettingsProps> = () => {
     notificationsEnabled,
     toggleNotifications,
     sendNotificationAlert,
+    reminderEmail,
+    setReminderEmail,
+    isSendingEmailReminder,
+    sendEmailReminder,
     theme,
     toggleTheme,
     language,
     setLanguage,
     updateProfileName,
     switchAccount,
+    user,
+    logout,
+    openAuthModal,
+    isSupabaseReady,
     t,
   } = useApp();
 
@@ -94,7 +120,7 @@ export const CornerSettings: React.FC<CornerSettingsProps> = () => {
 
       {/* Popover Menu in the Corner */}
       {isOpen && (
-        <div className="absolute right-0 top-full mt-2 w-80 sm:w-84 bg-white dark:bg-gray-800 rounded-3xl shadow-2xl border border-gray-200 dark:border-gray-700 p-4 z-50 animate-slide-up space-y-4">
+        <div className="absolute right-0 top-full mt-2 w-80 sm:w-88 bg-white dark:bg-gray-800 rounded-3xl shadow-2xl border border-gray-200 dark:border-gray-700 p-4 z-50 animate-slide-up space-y-4">
           {/* Header */}
           <div className="flex items-center justify-between border-b border-gray-100 dark:border-gray-700 pb-2.5">
             <div className="flex items-center gap-2">
@@ -113,7 +139,68 @@ export const CornerSettings: React.FC<CornerSettingsProps> = () => {
             </button>
           </div>
 
-          {/* SECTION 1: QUẢN LÝ THÔNG BÁO (BẬT / TẮT THÔNG BÁO) */}
+          {/* TÀI KHOẢN THÀNH VIÊN */}
+          <div className="p-3 rounded-2xl bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-950/40 dark:to-teal-950/40 border border-emerald-200 dark:border-emerald-800 space-y-2">
+            <div className="flex items-center gap-2">
+              <ShieldCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+              <span className="text-xs font-black text-emerald-900 dark:text-emerald-200">
+                Tài khoản thành viên
+              </span>
+            </div>
+
+            {user ? (
+              <div className="space-y-2 pt-1 border-t border-emerald-200/60 dark:border-emerald-800/60">
+                <div className="flex items-center justify-between text-xs">
+                  <div className="truncate max-w-[180px]">
+                    <p className="font-bold text-gray-900 dark:text-white truncate">
+                      {user.email}
+                    </p>
+                    <p className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold">
+                      Đã đồng bộ trực tuyến
+                    </p>
+                  </div>
+                  <button
+                    onClick={async () => {
+                      await logout();
+                      setIsOpen(false);
+                    }}
+                    className="px-2.5 py-1 text-[11px] font-bold text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-lg transition-colors cursor-pointer"
+                  >
+                    Đăng xuất
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-2 pt-1">
+                <p className="text-[11px] text-emerald-800/80 dark:text-emerald-300/80">
+                  Đăng nhập để lưu điểm tích lũy và đồng bộ giữa các thiết bị.
+                </p>
+                <div className="grid grid-cols-2 gap-1.5">
+                  <button
+                    onClick={() => {
+                      setIsOpen(false);
+                      openAuthModal('login');
+                    }}
+                    className="py-1.5 px-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl transition-colors shadow-sm flex items-center justify-center gap-1 cursor-pointer"
+                  >
+                    <LogIn className="w-3.5 h-3.5" />
+                    <span>Đăng nhập</span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      setIsOpen(false);
+                      openAuthModal('signup');
+                    }}
+                    className="py-1.5 px-2 bg-white dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-600 text-gray-800 dark:text-gray-200 font-bold text-xs rounded-xl transition-colors flex items-center justify-center gap-1 cursor-pointer"
+                  >
+                    <span>Đăng ký</span>
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* SECTION 1: QUẢN LÝ THÔNG BÁO */}
           <div className="p-3.5 rounded-2xl bg-gray-50 dark:bg-gray-750/50 border border-gray-100 dark:border-gray-700 space-y-2.5">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2.5">
@@ -170,9 +257,50 @@ export const CornerSettings: React.FC<CornerSettingsProps> = () => {
               <Bell className="w-3 h-3" />
               <span>{t('sendTestNotification')}</span>
             </button>
+
+            {/* Resend Email Reminder Box */}
+            <div className="pt-2 border-t border-gray-200/70 dark:border-gray-700/70 space-y-1.5">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-black text-emerald-800 dark:text-emerald-300 uppercase flex items-center gap-1">
+                  <Mail className="w-3 h-3 text-emerald-500" />
+                  <span>{t('resendEmailReminder')}</span>
+                </span>
+                {user?.email && (
+                  <span className="text-[9px] text-gray-400 font-semibold truncate max-w-[120px]" title={user.email}>
+                    {user.email}
+                  </span>
+                )}
+              </div>
+
+              <div className="flex gap-1.5">
+                <input
+                  type="email"
+                  value={reminderEmail || user?.email || ''}
+                  onChange={(e) => setReminderEmail(e.target.value)}
+                  placeholder={t('enterReminderEmail')}
+                  className="flex-1 px-2.5 py-1 text-xs bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-xl text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:border-emerald-500"
+                />
+                <button
+                  onClick={() => sendEmailReminder()}
+                  disabled={isSendingEmailReminder}
+                  className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white rounded-xl text-xs font-bold transition-all shadow-sm flex items-center gap-1 cursor-pointer shrink-0"
+                  title={t('sendEmailReminderBtn')}
+                >
+                  {isSendingEmailReminder ? (
+                    <Loader2 className="w-3 h-3 animate-spin" />
+                  ) : (
+                    <Send className="w-3 h-3" />
+                  )}
+                  <span>{isSendingEmailReminder ? t('sendingEmail') : 'Gửi'}</span>
+                </button>
+              </div>
+              <p className="text-[10px] text-gray-400 leading-tight">
+                {t('emailReminderNote')}
+              </p>
+            </div>
           </div>
 
-          {/* SECTION 2: QUẢN LÝ TÀI KHOẢN */}
+          {/* SECTION 2: THÔNG TIN HỒ SƠ */}
           <div className="p-3.5 rounded-2xl bg-gray-50 dark:bg-gray-750/50 border border-gray-100 dark:border-gray-700 space-y-2.5">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2.5">
@@ -296,19 +424,21 @@ export const CornerSettings: React.FC<CornerSettingsProps> = () => {
             </div>
           </div>
 
-          {/* Bottom Logout / Reset */}
-          <div className="pt-1 flex items-center gap-2">
-            <button
-              onClick={() => {
-                switchAccount('guest');
-                setIsOpen(false);
-              }}
-              className="w-full py-2 px-3 rounded-xl border border-rose-200 dark:border-rose-900/40 text-rose-600 dark:text-rose-400 text-xs font-bold hover:bg-rose-50 dark:hover:bg-rose-950/30 flex items-center justify-center gap-1.5 cursor-pointer transition-colors"
-            >
-              <LogOut className="w-3.5 h-3.5" />
-              <span>{t('logoutBtn')}</span>
-            </button>
-          </div>
+          {/* Bottom Logout Button (Chỉ hiển thị khi đã đăng nhập) */}
+          {user && (
+            <div className="pt-2 border-t border-gray-100 dark:border-gray-700">
+              <button
+                onClick={async () => {
+                  await logout();
+                  setIsOpen(false);
+                }}
+                className="w-full py-2.5 px-3 rounded-2xl border border-rose-200 dark:border-rose-900/50 text-rose-600 dark:text-rose-400 text-xs font-bold hover:bg-rose-50 dark:hover:bg-rose-950/30 flex items-center justify-center gap-2 cursor-pointer transition-colors"
+              >
+                <LogOut className="w-3.5 h-3.5" />
+                <span>{t('logoutBtn')}</span>
+              </button>
+            </div>
+          )}
         </div>
       )}
     </div>

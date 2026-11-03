@@ -1,6 +1,6 @@
 import React from 'react';
 import { useApp } from '../context/AppContext';
-import { Sun, Moon, Bell, Globe, Sparkles, User, Award } from 'lucide-react';
+import { Sun, Moon, Bell, Globe, Sparkles, User, Award, ShieldCheck } from 'lucide-react';
 import { Language } from '../types';
 import { CornerSettings } from './CornerSettings';
 
@@ -10,7 +10,19 @@ interface HeaderProps {
 }
 
 export const Header: React.FC<HeaderProps> = ({ onOpenSettings, onNavigateTab }) => {
-  const { language, setLanguage, theme, toggleTheme, profile, currentRank, notificationsEnabled, sendNotificationAlert, t } = useApp();
+  const {
+    language,
+    setLanguage,
+    theme,
+    toggleTheme,
+    profile,
+    currentRank,
+    notificationsEnabled,
+    sendNotificationAlert,
+    user,
+    openAuthModal,
+    t,
+  } = useApp();
 
   const languages: { code: Language; label: string; flag: string }[] = [
     { code: 'vi', label: 'Tiếng Việt', flag: '🇻🇳' },
@@ -58,6 +70,11 @@ export const Header: React.FC<HeaderProps> = ({ onOpenSettings, onNavigateTab })
               <span className="text-xs font-bold text-gray-800 dark:text-gray-200">
                 Lv.{currentRank.level} {currentRank.title[language] || currentRank.title.vi}
               </span>
+              {user && (
+                <span className="inline-flex items-center px-1.5 py-0.2 rounded-full text-[9px] font-bold bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300">
+                  Supabase
+                </span>
+              )}
             </div>
             <div className="flex items-center gap-2">
               <div className="w-24 bg-gray-200 dark:bg-gray-700 h-1.5 rounded-full overflow-hidden">
@@ -85,6 +102,27 @@ export const Header: React.FC<HeaderProps> = ({ onOpenSettings, onNavigateTab })
             <span>{currentRank.badge}</span>
             <span>{profile.points}đ</span>
           </button>
+
+          {/* Supabase Login Button (if not signed in) */}
+          {!user ? (
+            <button
+              onClick={() => openAuthModal('login')}
+              className="flex items-center gap-1 px-2.5 sm:px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-sm transition-all cursor-pointer shrink-0"
+              title="Đăng nhập tài khoản Supabase"
+            >
+              <User className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Đăng nhập</span>
+            </button>
+          ) : (
+            <button
+              onClick={() => openAuthModal('login')}
+              className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 text-xs font-bold text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100 transition-colors cursor-pointer"
+              title="Xem thông tin tài khoản Supabase"
+            >
+              <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
+              <span className="max-w-[100px] truncate">{profile.name}</span>
+            </button>
+          )}
 
           {/* Language Selector */}
           <div className="relative group">

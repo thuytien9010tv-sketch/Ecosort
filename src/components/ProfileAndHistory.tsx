@@ -1,7 +1,18 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { USER_RANKS } from '../data/wasteDatabase';
-import { Award, Trash2, Calendar, Clock, Sparkles, Check, ChevronRight, ShieldCheck, Flame } from 'lucide-react';
+import {
+  Award,
+  Trash2,
+  Calendar,
+  Clock,
+  Sparkles,
+  Check,
+  ChevronRight,
+  ShieldCheck,
+  Flame,
+  LogIn,
+} from 'lucide-react';
 import { BinColor } from '../types';
 
 interface ProfileAndHistoryProps {
@@ -9,7 +20,19 @@ interface ProfileAndHistoryProps {
 }
 
 export const ProfileAndHistory: React.FC<ProfileAndHistoryProps> = ({ onOpenSettings }) => {
-  const { profile, currentRank, nextRank, pointsToNextRank, progressPercent, clearHistory, language, t } = useApp();
+  const {
+    profile,
+    currentRank,
+    nextRank,
+    pointsToNextRank,
+    progressPercent,
+    clearHistory,
+    language,
+    user,
+    logout,
+    openAuthModal,
+    t,
+  } = useApp();
   const [showClearConfirm, setShowClearConfirm] = useState(false);
 
   const getBinBadgeClass = (bin: BinColor) => {
@@ -104,6 +127,69 @@ export const ProfileAndHistory: React.FC<ProfileAndHistoryProps> = ({ onOpenSett
           </div>
         </div>
       </div>
+
+      {/* Cloud Sync Card */}
+      {user ? (
+        <div className="bg-white dark:bg-gray-800 rounded-3xl p-5 border border-emerald-200 dark:border-emerald-800 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="w-11 h-11 rounded-2xl bg-emerald-100 dark:bg-emerald-950 flex items-center justify-center text-emerald-600 dark:text-emerald-400 shrink-0">
+              <ShieldCheck className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h4 className="text-sm font-black text-gray-900 dark:text-white">
+                  Tài khoản thành viên
+                </h4>
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
+                  Trực tuyến
+                </span>
+              </div>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                Email: <span className="font-semibold text-emerald-600 dark:text-emerald-400">{user.email}</span>
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
+            <button
+              onClick={logout}
+              className="py-2 px-3.5 text-xs font-bold rounded-xl bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 transition-colors cursor-pointer"
+            >
+              Đăng xuất
+            </button>
+          </div>
+        </div>
+      ) : (
+        <div className="bg-gradient-to-r from-emerald-50 via-teal-50 to-emerald-100/50 dark:from-emerald-950/30 dark:via-teal-950/30 dark:to-emerald-900/20 rounded-3xl p-5 border border-emerald-200 dark:border-emerald-800 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-3.5">
+            <div className="w-11 h-11 rounded-2xl bg-emerald-600 text-white flex items-center justify-center text-xl shadow-md shadow-emerald-600/25 shrink-0">
+              <Sparkles className="w-5 h-5" />
+            </div>
+            <div>
+              <h4 className="text-sm font-black text-gray-900 dark:text-white">
+                Đăng nhập để đồng bộ dữ liệu
+              </h4>
+              <p className="text-xs text-gray-600 dark:text-gray-400 mt-0.5">
+                Lưu điểm số, lịch sử phân loại và thứ hạng an toàn trên đám mây.
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
+            <button
+              onClick={() => openAuthModal('login')}
+              className="py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black rounded-xl shadow-md shadow-emerald-600/20 cursor-pointer transition-colors flex items-center gap-1.5"
+            >
+              <LogIn className="w-3.5 h-3.5" />
+              <span>Đăng nhập</span>
+            </button>
+            <button
+              onClick={() => openAuthModal('signup')}
+              className="py-2.5 px-3.5 bg-white dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700 text-gray-800 dark:text-gray-200 text-xs font-bold rounded-xl cursor-pointer transition-colors"
+            >
+              Đăng ký
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* 11 Ranks Progression Roadmap (Exact as described in prompt) */}
       <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 sm:p-8 border border-gray-100 dark:border-gray-700 shadow-sm space-y-5">

@@ -15,11 +15,12 @@ import { ProfileAndHistory } from './components/ProfileAndHistory';
 import { LevelUpModal } from './components/LevelUpModal';
 import { NotificationToast } from './components/NotificationToast';
 import { SettingsModal } from './components/SettingsModal';
+import { AuthModal } from './components/AuthModal';
 
 const AppContent: React.FC = () => {
   const [currentTab, setCurrentTab] = useState<string>('sort');
   const [isSettingsOpen, setIsSettingsOpen] = useState<boolean>(false);
-  const { t } = useApp();
+  const { t, isAuthModalOpen, closeAuthModal, authModalTab } = useApp();
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-gray-100 flex flex-col font-['Plus_Jakarta_Sans',sans-serif] transition-colors pb-24 md:pb-12">
@@ -66,6 +67,11 @@ const AppContent: React.FC = () => {
       <SettingsModal
         isOpen={isSettingsOpen}
         onClose={() => setIsSettingsOpen(false)}
+      />
+      <AuthModal
+        isOpen={isAuthModalOpen}
+        onClose={closeAuthModal}
+        initialTab={authModalTab}
       />
     </div>
   );

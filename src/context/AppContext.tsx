@@ -1,8 +1,23 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { Language, Theme, UserProfile, WasteItem, UserRank, ClassificationRecord } from '../types';
 import { USER_RANKS } from '../data/wasteDatabase';
 import { TRANSLATIONS } from '../data/translations';
 import confetti from 'canvas-confetti';
+import type { User, Session } from '@supabase/supabase-js';
+import {
+  getSupabaseClient,
+  getSession,
+  signOut as supabaseSignOut,
+  isSupabaseConfigured as checkSupabaseConfigured,
+} from '../lib/supabase';
+import { sendReminderEmail } from '../lib/resend';
+import {
+  fetchCloudProfile,
+  fetchCloudHistory,
+  saveCloudProfile,
+  insertCloudClassification,
+  clearCloudHistory,
+} from '../lib/supabaseSync';
 
 interface AppContextType {
   language: Language;
@@ -20,12 +35,27 @@ interface AppContextType {
   notificationsEnabled: boolean;
   toggleNotifications: () => void;
   sendNotificationAlert: (customMsg?: string) => void;
+  reminderEmail: string;
+  setReminderEmail: (email: string) => void;
+  isSendingEmailReminder: boolean;
+  sendEmailReminder: (targetEmail?: string) => Promise<{ success: boolean; message: string }>;
   switchAccount: (accountType: 'default' | 'guest' | 'family') => void;
   updateProfileName: (name: string) => void;
   t: (key: string) => string;
   levelUpModal: { show: boolean; rank: UserRank | null; close: () => void };
   toastMessage: string | null;
   closeToast: () => void;
+
+  // Supabase Auth Extensions
+  user: User | null;
+  session: Session | null;
+  isAuthModalOpen: boolean;
+  authModalTab: 'login' | 'signup';
+  openAuthModal: (tab?: 'login' | 'signup') => void;
+  closeAuthModal: () => void;
+  logout: () => Promise<void>;
+  refreshAuthSession: () => Promise<void>;
+  isSupabaseReady: boolean;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -79,6 +109,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return saved !== null ? saved === 'true' : true;
   });
 
+  // Supabase Auth State
+  const [user, setUser] = useState<User | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [authModalTab, setAuthModalTab] = useState<'login' | 'signup'>('login');
+  const [isSupabaseReady, setIsSupabaseReady] = useState<boolean>(() => checkSupabaseConfigured());
+  const [reminderEmail, setReminderEmailState] = useState<string>(() => {
+    return localStorage.getItem('ecosort_reminder_email') || '';
+  });
+  const [isSendingEmailReminder, setIsSendingEmailReminder] = useState<boolean>(false);
+
   const [profile, setProfile] = useState<UserProfile>(() => {
     const saved = localStorage.getItem('ecosort_profile');
     if (saved) {
@@ -127,6 +168,128 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
+  // Sync Supabase Auth Session
+  const refreshAuthSession = useCallback(async () => {
+    const ready = checkSupabaseConfigured();
+    setIsSupabaseReady(ready);
+    if (!ready) {
+      setUser(null);
+      setSession(null);
+      return;
+    }
+    try {
+      const sess = await getSession();
+      setSession(sess);
+      setUser(sess?.user || null);
+      if (sess?.user) {
+        setProfile((prev) => ({
+          ...prev,
+          id: sess.user.id,
+          email: sess.user.email,
+          name:
+            sess.user.user_metadata?.full_name ||
+            sess.user.email?.split('@')[0] ||
+            prev.name,
+        }));
+      }
+    } catch (err) {
+      console.warn('Error refreshing Supabase session:', err);
+    }
+  }, []);
+
+  useEffect(() => {
+    refreshAuthSession();
+
+    const client = getSupabaseClient();
+    if (!client) return;
+
+    const {
+      data: { subscription },
+    } = client.auth.onAuthStateChange((event, newSession) => {
+      setSession(newSession);
+      setUser(newSession?.user || null);
+      if (newSession?.user) {
+        const u = newSession.user;
+        const initialName =
+          u.user_metadata?.full_name ||
+          u.email?.split('@')[0] ||
+          'Chiến Binh Xanh';
+
+        setProfile((prev) => ({
+          ...prev,
+          id: u.id,
+          email: u.email,
+          name: initialName,
+        }));
+
+        // Tự động đồng bộ hồ sơ và lịch sử từ Supabase Database (nếu đã tạo bảng)
+        fetchCloudProfile(u.id).then((cloudProfile) => {
+          fetchCloudHistory(u.id).then((cloudHistory) => {
+            setProfile((prev) => ({
+              ...prev,
+              id: u.id,
+              email: u.email,
+              name: cloudProfile?.name || prev.name || initialName,
+              avatar: cloudProfile?.avatar || prev.avatar,
+              points: cloudProfile?.points ?? prev.points,
+              level: cloudProfile?.level ?? prev.level,
+              dailyStreak: cloudProfile?.dailyStreak ?? prev.dailyStreak,
+              lastActiveDate: cloudProfile?.lastActiveDate || prev.lastActiveDate,
+              history: cloudHistory && cloudHistory.length > 0 ? cloudHistory : prev.history,
+            }));
+          });
+        });
+      } else {
+        // When session is cleared or signed out
+        setProfile((prev) => ({
+          ...prev,
+          id: 'user-default',
+          email: undefined,
+          name: 'Chiến Binh Xanh',
+        }));
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [refreshAuthSession]);
+
+  const openAuthModal = (tab: 'login' | 'signup' = 'login') => {
+    setAuthModalTab(tab);
+    setIsAuthModalOpen(true);
+  };
+
+  const closeAuthModal = () => {
+    setIsAuthModalOpen(false);
+  };
+
+  const logout = async () => {
+    try {
+      await supabaseSignOut();
+    } catch (err) {
+      console.warn('Error during logout:', err);
+    } finally {
+      setUser(null);
+      setSession(null);
+      setProfile((prev) => {
+        const resetProfile: UserProfile = {
+          ...prev,
+          id: 'user-default',
+          email: undefined,
+          name: 'Chiến Binh Xanh',
+        };
+        try {
+          localStorage.setItem('ecosort_profile', JSON.stringify(resetProfile));
+        } catch {
+          // ignore
+        }
+        return resetProfile;
+      });
+      setToastMessage('Đã đăng xuất tài khoản thành công!');
+    }
+  };
+
   // Sync theme with document element
   useEffect(() => {
     const root = document.documentElement;
@@ -169,8 +332,50 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     });
   };
 
+  const setReminderEmail = (email: string) => {
+    setReminderEmailState(email);
+    try {
+      localStorage.setItem('ecosort_reminder_email', email.trim());
+    } catch {
+      // ignore
+    }
+  };
+
+  const sendEmailReminder = async (targetEmail?: string): Promise<{ success: boolean; message: string }> => {
+    const toEmail = (targetEmail || reminderEmail || user?.email || '').trim();
+    if (!toEmail) {
+      setToastMessage('⚠️ Vui lòng nhập địa chỉ email nhận lời nhắc!');
+      return { success: false, message: 'Vui lòng nhập email' };
+    }
+
+    setIsSendingEmailReminder(true);
+    try {
+      const res = await sendReminderEmail({
+        email: toEmail,
+        userName: profile.name || user?.user_metadata?.full_name || 'Chiến Binh Xanh',
+        language,
+      });
+
+      setReminderEmail(toEmail);
+      setToastMessage(`📧 Đã gửi email nhắc nhở phân loại rác tới ${toEmail} qua Resend!`);
+      return { success: true, message: res.message || 'Đã gửi email thành công' };
+    } catch (err: any) {
+      console.error('Error sending reminder email via Resend:', err);
+      const errMsg = err.message || 'Không thể gửi email nhắc nhở';
+      setToastMessage(`❌ Gửi email thất bại: ${errMsg}`);
+      return { success: false, message: errMsg };
+    } finally {
+      setIsSendingEmailReminder(false);
+    }
+  };
+
   const sendNotificationAlert = (customMsg?: string) => {
-    setToastMessage(customMsg || t('notificationReminderMsg'));
+    const toEmail = (reminderEmail || user?.email || '').trim();
+    if (toEmail) {
+      sendEmailReminder(toEmail);
+    } else {
+      setToastMessage(customMsg || t('notificationReminderMsg'));
+    }
   };
 
   const closeToast = () => {
@@ -227,6 +432,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       lastActiveDate: new Date().toISOString().split('T')[0],
     }));
 
+    if (user) {
+      insertCloudClassification(user.id, newRecord);
+      saveCloudProfile(user.id, {
+        points: newPoints,
+        level: newRank.level,
+        lastActiveDate: new Date().toISOString().split('T')[0],
+      });
+    }
+
     if (newRank.level > oldRank.level) {
       triggerConfetti();
       setLevelUpData({ show: true, rank: newRank });
@@ -240,9 +454,22 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       ...prev,
       history: [],
     }));
+    if (user) {
+      clearCloudHistory(user.id);
+    }
   };
 
-  const switchAccount = (accountType: 'default' | 'guest' | 'family') => {
+  const switchAccount = async (accountType: 'default' | 'guest' | 'family') => {
+    if (user) {
+      try {
+        await supabaseSignOut();
+      } catch (e) {
+        console.warn('supabaseSignOut error:', e);
+      }
+      setUser(null);
+      setSession(null);
+    }
+
     const preset = PRESET_ACCOUNTS[accountType];
     const initialPoints = preset.points || 0;
     const rank = getRankForPoints(initialPoints);
@@ -257,12 +484,21 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       lastActiveDate: new Date().toISOString().split('T')[0],
     };
     setProfile(newProfile);
+    try {
+      localStorage.setItem('ecosort_profile', JSON.stringify(newProfile));
+    } catch {
+      // ignore
+    }
     setToastMessage(`Đã chuyển sang tài khoản: ${newProfile.name}`);
   };
 
   const updateProfileName = (name: string) => {
-    if (!name.trim()) return;
-    setProfile((prev) => ({ ...prev, name: name.trim() }));
+    const trimmed = name.trim();
+    if (!trimmed) return;
+    setProfile((prev) => ({ ...prev, name: trimmed }));
+    if (user) {
+      saveCloudProfile(user.id, { name: trimmed });
+    }
     setToastMessage('Đã cập nhật tên tài khoản!');
   };
 
@@ -288,6 +524,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         notificationsEnabled,
         toggleNotifications,
         sendNotificationAlert,
+        reminderEmail,
+        setReminderEmail,
+        isSendingEmailReminder,
+        sendEmailReminder,
         switchAccount,
         updateProfileName,
         t,
@@ -298,6 +538,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         },
         toastMessage,
         closeToast,
+
+        // Auth
+        user,
+        session,
+        isAuthModalOpen,
+        authModalTab,
+        openAuthModal,
+        closeAuthModal,
+        logout,
+        refreshAuthSession,
+        isSupabaseReady,
       }}
     >
       {children}

@@ -1,7 +1,23 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { Language, Theme } from '../types';
-import { X, Sun, Moon, Bell, Globe, User, LogOut, Check, Sparkles, Edit3 } from 'lucide-react';
+import {
+  X,
+  Sun,
+  Moon,
+  Bell,
+  Globe,
+  User,
+  LogOut,
+  LogIn,
+  Check,
+  Sparkles,
+  Edit3,
+  ShieldCheck,
+  Mail,
+  Send,
+  Loader2,
+} from 'lucide-react';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -18,9 +34,16 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
     notificationsEnabled,
     toggleNotifications,
     sendNotificationAlert,
+    reminderEmail,
+    setReminderEmail,
+    isSendingEmailReminder,
+    sendEmailReminder,
     profile,
     updateProfileName,
     switchAccount,
+    user,
+    logout,
+    openAuthModal,
     t,
   } = useApp();
 
@@ -44,7 +67,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
-      <div className="bg-white dark:bg-gray-800 rounded-3xl max-w-md w-full p-6 shadow-2xl border border-gray-100 dark:border-gray-700 space-y-6 max-h-[90vh] overflow-y-auto">
+      <div className="bg-white dark:bg-gray-800 rounded-3xl max-w-md w-full p-6 shadow-2xl border border-gray-100 dark:border-gray-700 space-y-5 max-h-[90vh] overflow-y-auto">
         {/* Header */}
         <div className="flex items-center justify-between border-b border-gray-100 dark:border-gray-700 pb-3">
           <div className="flex items-center gap-2">
@@ -61,6 +84,67 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
           >
             <X className="w-5 h-5" />
           </button>
+        </div>
+
+        {/* MEMBER ACCOUNT SECTION */}
+        <div className="p-4 rounded-2xl bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-950/40 dark:to-teal-950/40 border border-emerald-200 dark:border-emerald-800 space-y-3">
+          <div className="flex items-center gap-2">
+            <ShieldCheck className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+            <h4 className="text-xs font-black uppercase tracking-wider text-emerald-900 dark:text-emerald-200">
+              Tài khoản thành viên
+            </h4>
+          </div>
+
+          {user ? (
+            <div className="space-y-2 pt-1 border-t border-emerald-200/60 dark:border-emerald-800/60">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs font-black text-gray-900 dark:text-white">
+                    {user.email}
+                  </p>
+                  <p className="text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold">
+                    Đã đồng bộ trực tuyến
+                  </p>
+                </div>
+                <button
+                  onClick={async () => {
+                    await logout();
+                    onClose();
+                  }}
+                  className="px-3 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 text-xs font-bold transition-colors cursor-pointer"
+                >
+                  Đăng xuất
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-2.5">
+              <p className="text-xs text-emerald-800/90 dark:text-emerald-300/90">
+                Đăng nhập bằng Supabase để lưu điểm tích lũy và đồng bộ giữa các thiết bị.
+              </p>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  onClick={() => {
+                    onClose();
+                    openAuthModal('login');
+                  }}
+                  className="py-2 px-3 bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs rounded-xl shadow-sm transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+                >
+                  <LogIn className="w-3.5 h-3.5" />
+                  <span>Đăng nhập</span>
+                </button>
+                <button
+                  onClick={() => {
+                    onClose();
+                    openAuthModal('signup');
+                  }}
+                  className="py-2 px-3 bg-white dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-600 text-gray-800 dark:text-gray-200 font-bold text-xs rounded-xl transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+                >
+                  <span>Đăng ký</span>
+                </button>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* User Account Info & Switch */}
@@ -141,7 +225,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
           </div>
         </div>
 
-        {/* Language Selection (Tiếng Việt, Tiếng Anh, Tiếng Trung, Tiếng Hàn) */}
+        {/* Language Selection */}
         <div className="space-y-2">
           <label className="text-xs font-bold text-gray-700 dark:text-gray-300 flex items-center gap-1.5">
             <Globe className="w-4 h-4 text-emerald-500" />
@@ -167,7 +251,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
           </div>
         </div>
 
-        {/* Theme Mode Toggle (Sáng và Tối) */}
+        {/* Theme Mode Toggle */}
         <div className="space-y-2">
           <label className="text-xs font-bold text-gray-700 dark:text-gray-300 flex items-center gap-1.5">
             {theme === 'dark' ? <Moon className="w-4 h-4 text-indigo-400" /> : <Sun className="w-4 h-4 text-amber-500" />}
@@ -199,7 +283,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
           </div>
         </div>
 
-        {/* Notifications (Thông báo nhắc nhở phân loại rác) */}
+        {/* Notifications */}
         <div className="space-y-2.5 p-4 rounded-2xl border border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/40">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -235,21 +319,64 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
             <Bell className="w-3.5 h-3.5" />
             <span>{t('sendTestNotification')}</span>
           </button>
+
+          {/* Resend Email Reminder */}
+          <div className="pt-2.5 border-t border-gray-200/70 dark:border-gray-650 space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-black text-emerald-800 dark:text-emerald-300 uppercase flex items-center gap-1.5">
+                <Mail className="w-3.5 h-3.5 text-emerald-500" />
+                <span>{t('resendEmailReminder')}</span>
+              </span>
+              {user?.email && (
+                <span className="text-[10px] text-gray-400 font-semibold truncate max-w-[150px]" title={user.email}>
+                  {user.email}
+                </span>
+              )}
+            </div>
+
+            <div className="flex gap-2">
+              <input
+                type="email"
+                value={reminderEmail || user?.email || ''}
+                onChange={(e) => setReminderEmail(e.target.value)}
+                placeholder={t('enterReminderEmail')}
+                className="flex-1 px-3 py-2 text-xs bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-xl text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:border-emerald-500"
+              />
+              <button
+                onClick={() => sendEmailReminder()}
+                disabled={isSendingEmailReminder}
+                className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white rounded-xl text-xs font-bold transition-all shadow-sm flex items-center gap-1.5 cursor-pointer shrink-0"
+                title={t('sendEmailReminderBtn')}
+              >
+                {isSendingEmailReminder ? (
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                ) : (
+                  <Send className="w-3.5 h-3.5" />
+                )}
+                <span>{isSendingEmailReminder ? t('sendingEmail') : 'Gửi lời nhắc'}</span>
+              </button>
+            </div>
+            <p className="text-[11px] text-gray-500 dark:text-gray-400 leading-tight">
+              {t('emailReminderNote')}
+            </p>
+          </div>
         </div>
 
-        {/* Logout button */}
-        <div className="pt-2 border-t border-gray-100 dark:border-gray-700">
-          <button
-            onClick={() => {
-              switchAccount('guest');
-              onClose();
-            }}
-            className="w-full py-2.5 rounded-2xl border border-rose-200 dark:border-rose-900/50 text-rose-600 dark:text-rose-400 text-xs font-bold hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors cursor-pointer flex items-center justify-center gap-2"
-          >
-            <LogOut className="w-4 h-4" />
-            <span>{t('logoutBtn')} (Trở về Khách)</span>
-          </button>
-        </div>
+        {/* Nút Đăng xuất (Chỉ hiển thị khi đã đăng nhập) */}
+        {user && (
+          <div className="pt-2 border-t border-gray-100 dark:border-gray-700">
+            <button
+              onClick={async () => {
+                await logout();
+                onClose();
+              }}
+              className="w-full py-2.5 rounded-2xl border border-rose-200 dark:border-rose-900/50 text-rose-600 dark:text-rose-400 text-xs font-bold hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors cursor-pointer flex items-center justify-center gap-2"
+            >
+              <LogOut className="w-4 h-4" />
+              <span>{t('logoutBtn')}</span>
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
