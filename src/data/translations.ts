@@ -1,4 +1,4 @@
-import { Language } from '../types';
+﻿import { Language } from '../types';
 
 export const TRANSLATIONS: Record<Language, Record<string, string>> = {
   vi: {
@@ -132,13 +132,13 @@ export const TRANSLATIONS: Record<Language, Record<string, string>> = {
     // Locations & Tips
     tabLocations: 'Gợi ý điểm thu gom',
     tabEcoTips: 'Mẹo giảm rác & Sống xanh',
-    locationsSubtitle: 'Các trạm thu hồi pin cũ, rác điện tử, vỏ hộp sữa và vựa phế liệu uy tín',
+    locationsSubtitle: 'Các trạm thu hồi pin cũ, rác điện tử, vỏ hộp sữa và vựa phế liệu uy tín tại Vĩnh Long & Miền Nam',
     filterAll: 'Tất cả địa điểm',
     acceptedItemsLabel: 'Tiếp nhận:',
     workingHoursLabel: 'Giờ mở cửa:',
     directionsBtn: 'Chỉ đường / Chi tiết',
     ecoPlasticsNote: 'Mẹo nhận biết nhựa an toàn cho sức khỏe và môi trường',
-    searchLocPlaceholder: 'Tìm trạm thu gom theo tên siêu thị, quận, tỉnh thành...',
+    searchLocPlaceholder: 'Tìm trạm thu gom tại TP. Vĩnh Long, Long Hồ, Bình Minh...',
     filterSupermarket: '🛒 Siêu thị lớn (Pin & Vỏ hộp)',
     filterEwaste: '💻 Rác điện tử e-Waste',
     filterScrap: '📦 Vựa phế liệu (Có trả tiền)',

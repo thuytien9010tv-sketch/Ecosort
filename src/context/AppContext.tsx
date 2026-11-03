@@ -65,8 +65,8 @@ const PRESET_ACCOUNTS: Record<string, Partial<UserProfile>> = {
     id: 'user-default',
     name: 'Chiến Binh Xanh',
     avatar: '🌱',
-    points: 10,
-    dailyStreak: 3,
+    points: 0,
+    dailyStreak: 1,
   },
   guest: {
     id: 'user-guest',
@@ -79,8 +79,8 @@ const PRESET_ACCOUNTS: Record<string, Partial<UserProfile>> = {
     id: 'user-family',
     name: 'Gia Đình Sống Xanh',
     avatar: '🏡',
-    points: 85,
-    dailyStreak: 12,
+    points: 0,
+    dailyStreak: 1,
   },
 };
 
@@ -124,39 +124,31 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const saved = localStorage.getItem('ecosort_profile');
     if (saved) {
       try {
-        return JSON.parse(saved);
+        const parsed = JSON.parse(saved);
+        // Lọc bỏ mọi lịch sử giả lập demo cũ (nếu có)
+        const cleanHistory = Array.isArray(parsed.history)
+          ? parsed.history.filter((h: any) => h && h.id && !h.id.startsWith('demo-'))
+          : [];
+        // Nếu điểm trước đó do demo (lịch sử rỗng mà có điểm mặc định 10 hoặc 85) thì điểm là 0
+        const cleanPoints = cleanHistory.length === 0 ? 0 : (typeof parsed.points === 'number' ? parsed.points : 0);
+        return {
+          ...parsed,
+          points: cleanPoints,
+          level: getRankForPoints(cleanPoints).level,
+          history: cleanHistory,
+        };
       } catch (e) {
         console.error('Failed to parse profile', e);
       }
     }
-    const initialPoints = 10;
     return {
       id: 'user-default',
       name: 'Chiến Binh Xanh',
       avatar: '🌱',
-      points: initialPoints,
-      level: getRankForPoints(initialPoints).level,
-      history: [
-        {
-          id: 'demo-1',
-          itemId: 'chai-nhua-pet',
-          itemName: 'Chai nhựa nước ngọt / nước suối (PET số 1)',
-          category: 'recyclable',
-          binColor: 'yellow',
-          pointsEarned: 5,
-          timestamp: Date.now() - 3600000 * 2,
-        },
-        {
-          id: 'demo-2',
-          itemId: 'thuc-an-thua',
-          itemName: 'Thức ăn thừa, cơm canh, rau củ hỏng',
-          category: 'organic',
-          binColor: 'green',
-          pointsEarned: 5,
-          timestamp: Date.now() - 3600000 * 24,
-        },
-      ],
-      dailyStreak: 3,
+      points: 0,
+      level: 0,
+      history: [],
+      dailyStreak: 1,
       lastActiveDate: new Date().toISOString().split('T')[0],
     };
   });

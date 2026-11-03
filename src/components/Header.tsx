@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { useApp } from '../context/AppContext';
 import { Sun, Moon, Bell, Globe, Sparkles, User, Award, ShieldCheck } from 'lucide-react';
 import { Language } from '../types';
@@ -17,6 +17,7 @@ export const Header: React.FC<HeaderProps> = ({ onOpenSettings, onNavigateTab })
     toggleTheme,
     profile,
     currentRank,
+    progressPercent,
     notificationsEnabled,
     sendNotificationAlert,
     user,

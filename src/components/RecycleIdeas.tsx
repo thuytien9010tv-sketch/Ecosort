@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { RECYCLE_IDEAS, COMMON_MISTAKES } from '../data/wasteDatabase';
 import { RecycleIdea, CommonMistake } from '../types';
@@ -72,7 +72,7 @@ export const RecycleIdeas: React.FC = () => {
                     />
                     <div className="absolute top-3 left-3">
                       <span className="px-3 py-1 rounded-full text-[11px] font-extrabold uppercase bg-black/60 backdrop-blur-md text-white shadow-sm">
-                        {t(`material_${idea.material.replace('-', '_')}`)}
+                        {t(`mat_${idea.material.replace('-', '_')}`)}
                       </span>
                     </div>
                     <div className="absolute top-3 right-3">
