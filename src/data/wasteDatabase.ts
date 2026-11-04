@@ -1664,7 +1664,8 @@ export const COLLECTION_LOCATIONS: CollectionLocation[] = [
       vi: 'Bìa carton, vỏ chai nhựa sạch, bao bì đóng gói khô ráo, kim loại sắt thép vụn.',
       en: 'Cardboard, clean plastic bottles, dry packaging bags, scrap metal.',
       zh: '废纸箱、洗净塑料瓶、干燥包装塑料、废钢铁。',
-      ko: '골판지 박스, 플라스틱병, 건조 포장비닐, 고철.' }
+      ko: '골판지 박스, 플라스틱병, 건조 포장비닐, 고철.',
+    },
     notes: {
       vi: 'Điểm thu mua uy tín tại trung tâm Huyện Mang Thít, hỗ trợ phân loại rác tái chế và thu mua tận nhà.',
       en: 'Reputable recycling depot in Mang Thit District center with home pickup assistance.',
@@ -1690,7 +1691,8 @@ export const COLLECTION_LOCATIONS: CollectionLocation[] = [
       vi: 'Thùng carton, giấy vở cũ, lon nhôm, chai nhựa PET/HDPE, sắt vụn, đồ đồng thau.',
       en: 'Cardboard, old notebooks, aluminum cans, PET/HDPE bottles, scrap steel and brass.',
       zh: '废纸箱、旧课本纸张、铝罐、PET/HDPE塑料瓶、废铁废铜。',
-      ko: '종이 박스, 폐책, 알루미늄캔, 플라스틱 페트병, 고철.' }
+      ko: '종이 박스, 폐책, 알루미늄캔, 플라스틱 페트병, 고철.',
+    },
     notes: {
       vi: 'Trạm cân phế liệu lâu năm uy tín tại Huyện Vũng Liêm, thanh toán tiền mặt sòng phẳng.',
       en: 'Established recycling depot in Vung Liem District with verified weight and instant cash payout.',
