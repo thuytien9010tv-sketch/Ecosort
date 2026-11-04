@@ -30,14 +30,17 @@ export const CornerSettings: React.FC<CornerSettingsProps> = () => {
     notificationsEnabled,
     toggleNotifications,
     sendNotificationAlert,
+    reminderEmail,
+    setReminderEmail,
+    isSendingEmailReminder,
+    sendEmailReminder,
     theme,
     toggleTheme,
     language,
     setLanguage,
     updateProfileName,
     switchAccount,
-    authModal,
-    authUser,
+    user,
     logout,
     openAuthModal,
     t,
@@ -162,9 +165,6 @@ export const CornerSettings: React.FC<CornerSettingsProps> = () => {
                     Đăng xuất
                   </button>
                 </div>
-                <p className="text-[10px] text-gray-600 dark:text-gray-400 truncate">
-                  {authUser.email}
-                </p>
               </div>
             ) : (
               <div className="space-y-2 pt-1">
@@ -193,7 +193,7 @@ export const CornerSettings: React.FC<CornerSettingsProps> = () => {
                   </button>
                 </div>
               </div>
-            </div>
+            )}
           </div>
 
           {/* SECTION 2: QUẢN LÝ THÔNG BÁO (NHẮC NHỞ & RESEND EMAIL) */}

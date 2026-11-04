@@ -36,11 +36,14 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
     profile,
     updateProfileName,
     switchAccount,
-    authModal,
-    authUser,
+    user,
     logout,
-    syncWithCloud,
-    isSyncing,
+    openAuthModal,
+    refreshAuthSession,
+    reminderEmail,
+    setReminderEmail,
+    isSendingEmailReminder,
+    sendEmailReminder,
     t,
   } = useApp();
 
@@ -194,7 +197,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
           </div>
 
           {/* Supabase Account Status */}
-          {authUser ? (
+          {user ? (
             <div className="p-3 rounded-2xl bg-emerald-50/70 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 space-y-2">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold text-emerald-800 dark:text-emerald-300 flex items-center gap-1.5">
@@ -202,16 +205,15 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
                   <span>{t('authCloudSynced')}</span>
                 </span>
                 <button
-                  onClick={syncWithCloud}
-                  disabled={isSyncing}
+                  onClick={refreshAuthSession}
                   className="px-2.5 py-1 rounded-lg bg-emerald-600 text-white text-[11px] font-bold flex items-center gap-1 cursor-pointer disabled:opacity-50"
                 >
-                  <RefreshCw className={`w-3 h-3 ${isSyncing ? 'animate-spin' : ''}`} />
-                  <span>{isSyncing ? t('authSyncing') : t('authCloudSync')}</span>
+                  <RefreshCw className="w-3 h-3" />
+                  <span>{t('authCloudSync')}</span>
                 </button>
               </div>
               <p className="text-xs text-gray-600 dark:text-gray-300">
-                {t('authConnectedAs')} <strong className="font-semibold">{authUser.email}</strong>
+                {t('authConnectedAs')} <strong className="font-semibold">{user.email}</strong>
               </p>
             </div>
           ) : (
@@ -222,7 +224,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
               <button
                 onClick={() => {
                   onClose();
-                  authModal.open('login');
+                  openAuthModal('login');
                 }}
                 className="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-extrabold text-xs shadow-md shadow-emerald-600/25 flex items-center justify-center gap-2 cursor-pointer transition-transform active:scale-98"
               >
@@ -291,6 +293,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
           </label>
           <div className="grid grid-cols-2 gap-2">
             <button
+              onClick={() => setTheme('light')}
               className={`p-2.5 rounded-2xl text-xs font-bold flex items-center justify-center gap-2 border cursor-pointer ${
                 theme === 'light'
                   ? 'border-emerald-500 bg-emerald-100 text-emerald-950 font-black'
@@ -334,6 +337,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
               className={`w-11 h-6 rounded-full transition-colors relative cursor-pointer ${
                 notificationsEnabled ? 'bg-emerald-600' : 'bg-gray-300 dark:bg-gray-700'
               }`}
+            >
               <span
                 className={`absolute top-1 left-1 bg-white w-4 h-4 rounded-full transition-transform ${
                   notificationsEnabled ? 'translate-x-5' : 'translate-x-0'
