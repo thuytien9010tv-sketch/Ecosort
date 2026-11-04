@@ -10,7 +10,6 @@ import {
   signOut as supabaseSignOut,
   isSupabaseConfigured as checkSupabaseConfigured,
 } from '../lib/supabase';
-import { sendReminderEmail } from '../lib/resend';
 import {
   fetchCloudProfile,
   fetchCloudHistory,
@@ -35,10 +34,6 @@ interface AppContextType {
   notificationsEnabled: boolean;
   toggleNotifications: () => void;
   sendNotificationAlert: (customMsg?: string) => void;
-  reminderEmail: string;
-  setReminderEmail: (email: string) => void;
-  isSendingEmailReminder: boolean;
-  sendEmailReminder: (targetEmail?: string) => Promise<{ success: boolean; message: string }>;
   switchAccount: (accountType: 'default' | 'guest' | 'family') => void;
   updateProfileName: (name: string) => void;
   t: (key: string) => string;
@@ -115,10 +110,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [authModalTab, setAuthModalTab] = useState<'login' | 'signup'>('login');
   const [isSupabaseReady, setIsSupabaseReady] = useState<boolean>(() => checkSupabaseConfigured());
-  const [reminderEmail, setReminderEmailState] = useState<string>(() => {
-    return localStorage.getItem('ecosort_reminder_email') || '';
-  });
-  const [isSendingEmailReminder, setIsSendingEmailReminder] = useState<boolean>(false);
 
   const [profile, setProfile] = useState<UserProfile>(() => {
     const saved = localStorage.getItem('ecosort_profile');
@@ -324,50 +315,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     });
   };
 
-  const setReminderEmail = (email: string) => {
-    setReminderEmailState(email);
-    try {
-      localStorage.setItem('ecosort_reminder_email', email.trim());
-    } catch {
-      // ignore
-    }
-  };
-
-  const sendEmailReminder = async (targetEmail?: string): Promise<{ success: boolean; message: string }> => {
-    const toEmail = (targetEmail || reminderEmail || user?.email || '').trim();
-    if (!toEmail) {
-      setToastMessage('⚠️ Vui lòng nhập địa chỉ email nhận lời nhắc!');
-      return { success: false, message: 'Vui lòng nhập email' };
-    }
-
-    setIsSendingEmailReminder(true);
-    try {
-      const res = await sendReminderEmail({
-        email: toEmail,
-        userName: profile.name || user?.user_metadata?.full_name || 'Chiến Binh Xanh',
-        language,
-      });
-
-      setReminderEmail(toEmail);
-      setToastMessage(`📧 Đã gửi email nhắc nhở phân loại rác tới ${toEmail} qua Resend!`);
-      return { success: true, message: res.message || 'Đã gửi email thành công' };
-    } catch (err: any) {
-      console.error('Error sending reminder email via Resend:', err);
-      const errMsg = err.message || 'Không thể gửi email nhắc nhở';
-      setToastMessage(`❌ Gửi email thất bại: ${errMsg}`);
-      return { success: false, message: errMsg };
-    } finally {
-      setIsSendingEmailReminder(false);
-    }
-  };
-
   const sendNotificationAlert = (customMsg?: string) => {
-    const toEmail = (reminderEmail || user?.email || '').trim();
-    if (toEmail) {
-      sendEmailReminder(toEmail);
-    } else {
-      setToastMessage(customMsg || t('notificationReminderMsg'));
-    }
+    setToastMessage(customMsg || t('notificationReminderMsg'));
   };
 
   const closeToast = () => {
@@ -516,10 +465,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         notificationsEnabled,
         toggleNotifications,
         sendNotificationAlert,
-        reminderEmail,
-        setReminderEmail,
-        isSendingEmailReminder,
-        sendEmailReminder,
         switchAccount,
         updateProfileName,
         t,

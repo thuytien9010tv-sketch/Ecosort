@@ -199,7 +199,7 @@ export const CornerSettings: React.FC<CornerSettingsProps> = () => {
             )}
           </div>
 
-          {/* SECTION 2: QUẢN LÝ THÔNG BÁO (NHẮC NHỞ & RESEND EMAIL) */}
+          {/* SECTION 2: QUAN LY THONG BAO */}
           <div className="p-3.5 rounded-2xl bg-gray-50/90 dark:bg-[#162721] border border-gray-200/80 dark:border-emerald-800/60 space-y-2.5">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2.5">
@@ -255,47 +255,6 @@ export const CornerSettings: React.FC<CornerSettingsProps> = () => {
               <Bell className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
               <span>{t('sendTestNotification')}</span>
             </button>
-
-            {/* Resend Email Reminder Box */}
-            <div className="pt-2 border-t border-gray-200/80 dark:border-emerald-800/60 space-y-1.5">
-              <div className="flex items-center justify-between">
-                <span className="text-[10px] font-black text-emerald-950 dark:text-emerald-300 uppercase flex items-center gap-1">
-                  <Mail className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
-                  <span>{t('resendEmailReminder')}</span>
-                </span>
-                {user?.email && (
-                  <span className="text-[9px] text-gray-500 dark:text-emerald-400 font-semibold truncate max-w-[130px]" title={user.email}>
-                    {user.email}
-                  </span>
-                )}
-              </div>
-
-              <div className="flex gap-1.5">
-                <input
-                  type="email"
-                  value={reminderEmail || user?.email || ''}
-                  onChange={(e) => setReminderEmail(e.target.value)}
-                  placeholder={t('enterReminderEmail')}
-                  className="flex-1 px-2.5 py-1 text-xs bg-white text-gray-900 dark:bg-[#0c1613] dark:text-emerald-100 border border-gray-300 dark:border-emerald-800 rounded-xl placeholder-gray-400 dark:placeholder-emerald-600/70 focus:outline-none focus:border-emerald-500"
-                />
-                <button
-                  onClick={() => sendEmailReminder()}
-                  disabled={isSendingEmailReminder}
-                  className="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white rounded-xl text-xs font-bold transition-all shadow-sm flex items-center gap-1 cursor-pointer shrink-0"
-                  title={t('sendEmailReminderBtn')}
-                >
-                  {isSendingEmailReminder ? (
-                    <Loader2 className="w-3 h-3 animate-spin" />
-                  ) : (
-                    <Send className="w-3 h-3" />
-                  )}
-                  <span>{isSendingEmailReminder ? t('sendingEmail') : 'Gửi'}</span>
-                </button>
-              </div>
-              <p className="text-[10px] text-gray-600 dark:text-emerald-300/70 leading-tight font-medium">
-                {t('emailReminderNote')}
-              </p>
-            </div>
           </div>
 
           {/* SECTION 3: THÔNG TIN HỒ SƠ & ĐỔI TÊN */}
