@@ -175,6 +175,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
                       className="px-2 py-0.5 text-xs bg-emerald-600 text-white font-bold rounded-lg cursor-pointer"
                     >
                       OK
+                    </button>
                   </form>
                 ) : (
                   <h4 className="text-sm font-black text-gray-900 dark:text-emerald-100 flex items-center gap-1.5">
@@ -258,6 +259,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
               <button
                 onClick={() => switchAccount('guest')}
                 className="p-2 rounded-xl text-center bg-white hover:bg-emerald-50 text-gray-900 dark:bg-[#1d312a] dark:hover:bg-[#253d34] dark:text-emerald-200 border border-gray-200 dark:border-emerald-700/80 text-[11px] font-bold cursor-pointer transition-colors shadow-sm"
+              >
                 🍃 {t('userGuest')}
               </button>
             </div>
@@ -270,6 +272,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
             <span>{t('languageSetting')}</span>
           </label>
           <div className="grid grid-cols-2 gap-2">
+            {languages.map((l) => (
               <button
                 key={l.code}
                 onClick={() => setLanguage(l.code)}
@@ -356,7 +359,6 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
             <Bell className="w-3.5 h-3.5" />
             <span>{t('sendTestNotification')}</span>
           </button>
-        </div>
 
           {/* Resend Email Reminder Input in Settings Modal */}
           <div className="pt-2 border-t border-gray-200/80 dark:border-emerald-800/60 space-y-1.5">
