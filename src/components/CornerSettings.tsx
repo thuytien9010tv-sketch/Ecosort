@@ -16,6 +16,9 @@ import {
   Cloud,
   RefreshCw,
   ShieldCheck,
+  Mail,
+  Send,
+  Loader2,
 } from 'lucide-react';
 import { Language } from '../types';
 
